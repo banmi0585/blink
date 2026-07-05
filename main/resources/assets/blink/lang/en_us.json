@@ -1,0 +1,11 @@
+{
+  "key.categories.blink": "blink",
+  "item.minecraft.lingering_potion.effect.focus": "Lingering Potion of Focus",
+  "item.minecraft.tipped_arrow.effect.focus": "Arrow of Focus",
+  "item.minecraft.potion.effect.focus": "Potion of Focus",
+  "item.minecraft.splash_potion.effect.focus": "Splash Potion of Focus",
+  "effect.blink.focusing": "Focusing",
+  "key.blink.blink": "blinking",
+  "key.category.blink": "blink",
+  "blink.configuration.blink": " blink config"
+}

@@ -1,0 +1,11 @@
+{
+  "key.categories.blink": "眨眼",
+  "item.minecraft.lingering_potion.effect.focus": "滞留型专注药水",
+  "item.minecraft.tipped_arrow.effect.focus": "专注之箭",
+  "item.minecraft.potion.effect.focus": "专注药水",
+  "item.minecraft.splash_potion.effect.focus": "喷溅型专注药水",
+  "effect.blink.focusing": "专注",
+  "key.blink.blink": "眨眨眼",
+  "key.category.blink": "眨眼",
+  "blink.configuration.blink": "blink配置"
+}

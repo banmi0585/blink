@@ -1,0 +1,41 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="GNU Lesser General Public License version 3 (LGPLv3)"
+
+[[mods]]
+modId="blink"
+version="0.1.0"
+displayName="blink"
+displayURL="https://mcreator.net and To be determined"
+credits=" - NeoForge \u56E2\u961F\u63D0\u4F9B\u7684\u6A21\u7EC4\u6846\u67B6 - Mixin \u9879\u76EE\u63D0\u4F9B\u7684\u4EE3\u7801\u6CE8\u5165\u5DE5\u5177 - \u6240\u6709\u5728 GitHub \u4E0A\u8D21\u732E\u4EE3\u7801\u7684\u5F00\u53D1\u8005 - \u652F\u6301\u672C\u6A21\u7EC4\u5F00\u53D1\u548C\u6D4B\u8BD5\u7684\u793E\u533A\u6210\u5458 - \u8FD8\u6709deepseek\uFF0C\u6CA1\u6709\u5B83\u6211\u4EC0\u4E48\u90FD\u505A\u4E0D\u5230"
+authors="banmi"
+description="A mod that can blink"
+
+# Start of user code block mod configuration
+# End of user code block mod configuration
+
+[[mixins]]
+    config = "blink.mixins.json"
+
+# Start of user code block custom mixins
+# End of user code block custom mixins
+
+[[dependencies.blink]]
+    modId="neoforge"
+    type="required"
+    versionRange="[21.1.190,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.blink]]
+    modId="minecraft"
+    type="required"
+    versionRange="[1.21.1]"
+    ordering="AFTER"
+    side="BOTH"
+
+
+
+
+# Start of user code block dependencies configuration
+# End of user code block dependencies configuration
