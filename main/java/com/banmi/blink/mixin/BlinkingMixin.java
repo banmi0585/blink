@@ -174,13 +174,16 @@ public abstract class BlinkingMixin implements EyeStateProvider {
     @Override
     @Unique
     public boolean isEyeClosed() {
-        return this.isEyeClosed || this.shouldOpenEye;
+        return this.isEyeClosed;
     }
     
     // ========== 按键处理 ==========
     @Inject(method = "render", at = @At("HEAD"))
     private void onRenderHead(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
         handleBlinkKey();
+        // ========== 在HEAD注入点绘制遮罩 ==========
+        // 这会在所有GUI渲染之前绘制，但会被后续的GUI覆盖
+        drawBlinkOverlay(guiGraphics);
     }
     
     @Unique
@@ -229,8 +232,69 @@ public abstract class BlinkingMixin implements EyeStateProvider {
         }
     }
     
+    // ========== 遮罩绘制方法 ==========
+    @Unique
+    private void drawBlinkOverlay(GuiGraphics guiGraphics) {
+        Minecraft mc = Minecraft.getInstance();
+        
+        // ========== 1. 绘制睡眠遮罩（优先级最高） ==========
+        if (sleepProgress > 0.01f) {
+            drawSleepMask(guiGraphics);
+            // 睡眠时如果有物品栏，只显示睡眠遮罩，不显示眨眼遮罩
+            if (mc.screen != null) {
+                return;
+            }
+        }
+        
+        // ========== 2. 绘制眨眼遮罩 ==========
+        if (blinkProgress <= 0.01f) {
+            return;
+        }
+        
+        // 如果有物品栏界面打开，不绘制眨眼遮罩
+        if (mc.screen != null) {
+            return;
+        }
+        
+        int screenWidth = guiGraphics.guiWidth();
+        int screenHeight = guiGraphics.guiHeight();
+        
+        // 使用眨眼进度，不混合睡眠进度
+        float smoothProgress = easeInOut(blinkProgress);
+        float maxMaskHeight = screenHeight * 0.5f;
+        float maskHeight = maxMaskHeight * smoothProgress;
+        
+        // 获取上眼皮占比配置
+        float upperPercent = getUpperLidPercent();
+        float lowerPercent = 1.0f - upperPercent;
+        
+        // 计算上下眼皮高度
+        int upperHeight = (int)(maskHeight * 2 * upperPercent);
+        int lowerHeight = (int)(maskHeight * 2 * lowerPercent);
+        
+        // 上眼皮：从顶部向下
+        drawEyeLid(guiGraphics, screenWidth, 0, upperHeight, true);
+        // 下眼皮：从底部向上
+        drawEyeLid(guiGraphics, screenWidth, screenHeight - lowerHeight, lowerHeight, false);
+    }
+    
+    @Unique
+    private void drawSleepMask(GuiGraphics guiGraphics) {
+        if (sleepProgress <= 0.01f) return;
+        
+        int screenWidth = guiGraphics.guiWidth();
+        int screenHeight = guiGraphics.guiHeight();
+        int alpha = (int)(255 * sleepProgress);
+        
+        if (alpha > 5) {
+            int color = (alpha << 24) | 0x000000;
+            guiGraphics.fill(0, 0, screenWidth, screenHeight, color);
+        }
+    }
+    
     @Inject(method = "render", at = @At("TAIL"))
-    private void onRender(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    private void onRenderTail(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+        // ========== TAIL注入点只负责状态更新，不负责渲染 ==========
         Minecraft mc = Minecraft.getInstance();
         Player player = mc.player;
         
@@ -240,12 +304,10 @@ public abstract class BlinkingMixin implements EyeStateProvider {
         if (isDead && !wasDead) {
             resetEyeState();
             wasDead = true;
-            drawSleepMask(guiGraphics);
             return;
         }
         
         if (isDead) {
-            drawSleepMask(guiGraphics);
             return;
         }
         
@@ -257,7 +319,6 @@ public abstract class BlinkingMixin implements EyeStateProvider {
         // ========== 暂停检测 ==========
         if (mc.isPaused()) {
             isPaused = true;
-            drawSleepMask(guiGraphics);
             return;
         }
         
@@ -266,7 +327,7 @@ public abstract class BlinkingMixin implements EyeStateProvider {
             nextBlinkTime = System.currentTimeMillis() + getRandomBlinkInterval();
         }
         
-        // ========== 正常更新 ==========
+        // ========== 正常更新状态 ==========
         updateSleepState(player);
         
         if (sleepProgress < 0.9f) {
@@ -297,33 +358,6 @@ public abstract class BlinkingMixin implements EyeStateProvider {
             isBlinking = false;
             shouldOpenEye = false;
         }
-        
-        drawSleepMask(guiGraphics);
-        
-        if (blinkProgress <= 0.01f && sleepProgress <= 0.01f) {
-            return;
-        }
-        
-        int screenWidth = guiGraphics.guiWidth();
-        int screenHeight = guiGraphics.guiHeight();
-        
-        float totalProgress = Math.max(blinkProgress, sleepProgress);
-        float smoothProgress = easeInOut(totalProgress);
-        float maxMaskHeight = screenHeight * 0.5f;
-        float maskHeight = maxMaskHeight * smoothProgress;
-        
-        // 获取上眼皮占比配置
-        float upperPercent = getUpperLidPercent();
-        float lowerPercent = 1.0f - upperPercent;
-        
-        // 计算上下眼皮高度
-        int upperHeight = (int)(maskHeight * 2 * upperPercent);
-        int lowerHeight = (int)(maskHeight * 2 * lowerPercent);
-        
-        // 上眼皮：从顶部向下
-        drawEyeLid(guiGraphics, screenWidth, 0, upperHeight, true);
-        // 下眼皮：从底部向上
-        drawEyeLid(guiGraphics, screenWidth, screenHeight - lowerHeight, lowerHeight, false);
     }
     
     @Unique
@@ -342,20 +376,6 @@ public abstract class BlinkingMixin implements EyeStateProvider {
         
         if (isSleeping) {
             sleepProgress = Math.min(1.0f, sleepProgress + SLEEP_SPEED);
-        }
-    }
-    
-    @Unique
-    private void drawSleepMask(GuiGraphics guiGraphics) {
-        if (sleepProgress <= 0.01f) return;
-        
-        int screenWidth = guiGraphics.guiWidth();
-        int screenHeight = guiGraphics.guiHeight();
-        int alpha = (int)(255 * sleepProgress);
-        
-        if (alpha > 5) {
-            int color = (alpha << 24) | 0x000000;
-            guiGraphics.fill(0, 0, screenWidth, screenHeight, color);
         }
     }
     
@@ -440,29 +460,31 @@ public abstract class BlinkingMixin implements EyeStateProvider {
     @Unique
     private float calculateAlpha(int y, int startY, int height, boolean isTop) {
         if (isTop) {
+            // 上眼皮：从顶部向下
             if (y >= startY && y <= startY + height) {
                 return 1.0f;
             }
             if (y > startY + height && y <= startY + height + FEATHER_SIZE) {
                 float t = (float)(y - startY - height) / FEATHER_SIZE;
-                return 1.0f - smoothstep(t);
+                return 1.0f - smoothstep(t);  // 从1渐变到0
             }
             if (y < startY && y >= startY - FEATHER_SIZE) {
                 float t = (float)(startY - y) / FEATHER_SIZE;
-                return smoothstep(t);
+                return smoothstep(t);  // 从0渐变到1
             }
         } else {
+            // 下眼皮：从底部向上
             int bottomEdge = startY + height;
             if (y >= startY && y <= bottomEdge) {
                 return 1.0f;
             }
             if (y < startY && y >= startY - FEATHER_SIZE) {
                 float t = (float)(startY - y) / FEATHER_SIZE;
-                return smoothstep(t);
+                return 1.0f - smoothstep(t);  // 从1渐变到0（底部羽化）
             }
             if (y > bottomEdge && y <= bottomEdge + FEATHER_SIZE) {
                 float t = (float)(y - bottomEdge) / FEATHER_SIZE;
-                return 1.0f - smoothstep(t);
+                return smoothstep(t);  // 从0渐变到1（顶部羽化，与上眼皮衔接）
             }
         }
         return 0.0f;

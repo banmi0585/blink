@@ -4,9 +4,9 @@ license="GNU Lesser General Public License version 3 (LGPLv3)"
 
 [[mods]]
 modId="blink"
-version="0.1.0"
+version="0.1.1"
 displayName="blink"
-displayURL="https://mcreator.net and To be determined"
+displayURL="https://mcreator.net and https://github.com/banmi0585/blink"
 credits=" - NeoForge \u56E2\u961F\u63D0\u4F9B\u7684\u6A21\u7EC4\u6846\u67B6 - Mixin \u9879\u76EE\u63D0\u4F9B\u7684\u4EE3\u7801\u6CE8\u5165\u5DE5\u5177 - \u6240\u6709\u5728 GitHub \u4E0A\u8D21\u732E\u4EE3\u7801\u7684\u5F00\u53D1\u8005 - \u652F\u6301\u672C\u6A21\u7EC4\u5F00\u53D1\u548C\u6D4B\u8BD5\u7684\u793E\u533A\u6210\u5458 - \u8FD8\u6709deepseek\uFF0C\u6CA1\u6709\u5B83\u6211\u4EC0\u4E48\u90FD\u505A\u4E0D\u5230"
 authors="banmi"
 description="A mod that can blink"
